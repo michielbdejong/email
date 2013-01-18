@@ -2,87 +2,150 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>minimal remoteStorage.js example</title>
+    <title>unhosted social dashboard example</title>
   </head>
   <body>
     <div id="remotestorage-widget"></div>
-    <div id="config">
-      Domain: <input id="domain">
-      Port: <input id="port">
-      Secret: <input id="secret">
-      <input type="submit" value="connect" onclick="configure();">
-    </div>
-    <div id="main">
-      Text: <input id="text" style="width:70em">
-      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff">
-      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff">
-    </div>
-
-    <div id="status">
-      Please connect your remotestorage (get one at <a href="https://heahdk.net/">https://heahdk.net/</a>)
-    </div>
+    <div id="interface"> </div>
   </body>
   <script src="remoteStorage-debug.js"></script>
   <script>
-    function $(id) { return document.getElementById(id); }
-    $('config').style.display='none';
-    $('main').style.display='none';
-    
-    function connect(scope, divId, onReady) {
-      remoteStorage.claimAccess(scope).then(function() {
-        remoteStorage.displayWidget(divId);
-        remoteStorage.onWidget('ready', onReady);
-      });
+    function $(id) {
+      return document.getElementById(id);
     }
-    function sendTo(world) {
-      $('status').innerHTML = 'trying to send...';
-      remoteStorage.messages.sendTo(world, $('text').value, function(success) {
-        if(success) {
-          $('status').innerHTML = 'success! :)';
-        } else {
-          $('status').innerHTML = 'fail :(';
-        }
-      });
-    }
-
-    remoteStorage.defineModule('messages', function(privateClient, publicClient) {
-      var sock;
-      function connectSockethub(config, cb) {
-        newSocket(config, cb);
-        setInterval(function() {
-          if(sock && sock.readyState == WebSocket.CLOSED) {
-            newSocket(config);
-          }
-        }, 1000);
+    function makeHistory(arr) {
+      var str = '<ul>';
+      for(var i=0; i<arr.length; i++) {
+        str += '<li>'+arr[i]+'</li>';
       }
-      function newSocket(config, cb) {
-        sock = new WebSocket('wss://'+config.domain+':'+config.port+'/sock/websocket');
-        sock.onopen = function() { console.log('open'); cb(true); }
-        sock.onmessage = function(e) { console.log(e.data); /* HACK: */ $('status').innerHTML = e.data;}
-        sock.onclose = function() { console.log('closed'); cb(false); }
+      return str+'</ul>';
+    }
+    function setAppState(state) {
+      if(state=='start') {
+        $('interface').innerHTML =
+          'Please connect your remotestorage (get one at <a href="https://heahdk.net/">https://heahdk.net/</a)';
+      } else if(state=='connectingRs') {
+        $('interface').innerHTML =
+          'Connecting to your remotestorage...';
+      } else if(state=='connectingWs') {
+        remoteStorage.messages.getWebsocketAddress().then(function(obj) {
+          $('interface').innerHTML =
+            'Trying to connect to '+obj.wss;
+        });
+      } else if(state=='nosock') {
+        remoteStorage.messages.getWebsocketAddress().then(function(obj) {
+          $('interface').innerHTML =
+            'Domain: <input id="domain">'
+            +'Port: <input id="port">'
+            +'Secret: <input id="secret">'
+            +'<input type="submit" value="connect" onclick="configure();">'
+            +(obj.wss ?
+              'Failed to connect to '+obj.wss;
+              +' please check for <a href="'+obj.https
+              +'">SSL exceptions</a>'
+            :
+              ''
+            );
+        });
+      } else if(state=='sending') {
+        remoteStorage.messages.getHistory().then(function(arr) {
+          $('interface').innerHTML = '<p>Sending...</p>'+makeHistory(arr);
+        });
+      } else {//ready
+        remoteStorage.messages.getHistory().then(function(arr) {
+          $('interface').innerHTML =
+            'Text: <input id="text" style="width:70em">'
+            +'<input type="submit" value="f" onclick="sendTo(\'facebook\');" style="background-color:#008;color:#fff">'
+            +'<input type="submit" value="t" onclick="sendTo(\'twitter\');" style="background-color:#bbf;color:#fff">'
+            +makeHistory(arr);
+        });
+      }
+    }
+    setAppState('start');
+     
+    remoteStorage.claimAccess({ messages: 'rw' }).then(function() {
+      remoteStorage.displayWidget('remotestorage-connect');
+      remoteStorage.onWidget('ready', function() {
+        setAppState('connectingRs');
+        remoteStorage.messages.getConfig().then(function(config) {
+          if(config) {
+            setAppState('connectingWs');
+            remoteStorage.messages.tryConnect();
+          } else {
+            setAppState('nosock');
+          }
+        });
+      });
+      remoteStorage.onWidget('disconnected', function() {
+        setAppState('start');
+      });
+    });
+    function configure() {
+      var config = {
+        domain: $('domain').value,
+        port: $('port').value,
+        secret: $('secret').value
+      };
+      setAppState('connectingWs');
+      remoteStorage.messages.setConfig(config).then(function() {
+        remoteStorage.messages.tryConnect();
+      });
+    }
+    remoteStorage.messages.onSockState(function(open) {
+      if(open) {
+        setAppState('ready');
+      } else {
+        setAppState('nosock');
+      }
+    });
+    function sendTo(world) {
+      var text = $('text').value;
+      setAppState('sending');
+      remoteStorage.messages.sendTo(world, text);
+    }
+    remoteStorage.messages.onResult(function() {
+      setAppState('ready');
+    });
+    remoteStorage.defineModule('messages', function(privateClient, publicClient) {
+      var sock, open, sockStateCb = function() {}, resultCb = function() {};
+      function getWebsocketAddress() {
+        privateClient.getObject('.sockethub').then(function(obj) {
+          if(obj) {
+            return {
+              wss: 'wss://'+obj.domain+':'+obj.port+'/sock/websocket',
+              https: 'https://'+obj.domain+':'+obj.port+'/'
+            };
+          }
+        });
       }
       return {
         exports: {
-          setConfig: function (domain, port, secret, cb) {
-            var obj = {
-              domain: domain,
-              port: port,
-              secret: secret
-            };
-            privateClient.storeObject('sockethub-config', '.sockethub', obj);
-            connectSockethub(obj, cb);
+          setConfig: function (obj) {
+            return privateClient.storeObject('sockethub-config', '.sockethub', obj);
           },
-          tryConnect: function (cb) {
-            privateClient.getObject('.sockethub').then(function(obj) {
-              if(obj) {
-                connectSockethub(obj, cb);
-              } else {
-                cb(false);
-              }
+          tryConnect: function () {
+            getWebsocketAddress().then(function(obj) {
+              sock = new WebSocket(obj.wss);
+
+              sock.onopen = function() {
+                sockStateCb(true);
+                open=true;
+              };
+              sock.onmessage = function(e) {
+                addHistory(e.data);
+                onResult();
+              };
+              sock.onclose = function() {
+                if(open) {//open socket died
+                  newSocket();
+                } else {//socket failed to open
+                  sockStateCb(false);
+                }
+              };
             });
           },
-          sendTo: function(world, text, cb) {
-            privateClient.getObject('.sockethub').then(function(config) {
+          sendTo: function(world, text) {
+            return privateClient.getObject('.sockethub').then(function(config) {
               sock.send(JSON.stringify({
                 world: world,
                 id: new Date().getTime(),
@@ -92,38 +155,15 @@
                 secret: config.secret
               }));
             });
+          },
+          onSockState: function(cb) {
+            sockStateCb = cb;
+          },
+          onResult: function(cb) {
+            resultCb = cb;
           }
         }
       };
-    });
-    function configure() {
-      $('status').innerHTML = 'trying to connect...';
-      remoteStorage.messages.setConfig($('domain').value, $('port').value, $('secret').value, function(success) {
-        if(success) {
-          goToMain();
-        } else {
-          $('status').innerHTML = 'could not connect :(';
-        }
-      });
-    }
-    function goToMain() {
-      $('status').innerHTML = 'ok';
-      $('main').style.display='block';
-      $('config').style.display='none';
-    }
-    function goToConfig() {
-      $('status').innerHTML = 'ok';
-      $('config').style.display='block';
-      $('main').style.display='none';
-    }
-    connect({ messages: 'rw' }, 'remotestorage-widget', function() {
-      remoteStorage.messages.tryConnect(function(success) {
-        if(success) {
-          goToMain();
-        } else {
-          goToConfig();
-        }
-      });
     });
   </script>
 </html>
