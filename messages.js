@@ -29,8 +29,8 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
         open=true;
       };
       sock.onmessage = function(e) {
-        var timestamp = new Date().getTime(),
-          timePath = 'outgoing/'+timestamp.substring(0, 4)+'/'+timestamp.substring(4, 7)+'/'+timestamp.substring(7);
+        var timeStr = new Date().getTime().toString(),
+          timePath = 'outgoing/'+timeStr.substring(0, 4)+'/'+timeStr.substring(4, 7)+'/'+timeStr.substring(7);
         privateClient.storeObject('activity', timePath, e).then(function() {
           onResult();
         });
