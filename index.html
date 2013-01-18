@@ -132,8 +132,11 @@
                 open=true;
               };
               sock.onmessage = function(e) {
-                addHistory(e.data);
-                onResult();
+                var timestamp = new Date().getTime(),
+                  timePath = 'outgoing/'+timestamp.substring(0, 4)+'/'+timestamp.substring(4, 7)+'/'+timestamp.substring(7);
+                privateClient.storeObject('activity', timePath, e).then(function() {
+                  onResult();
+                });
               };
               sock.onclose = function() {
                 if(open) {//open socket died
@@ -143,6 +146,9 @@
                 }
               };
             });
+          },
+          getHistory: function() {
+            return [];
           },
           sendTo: function(world, text) {
             return privateClient.getObject('.sockethub').then(function(config) {
