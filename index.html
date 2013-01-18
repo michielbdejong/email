@@ -5,7 +5,7 @@
     <title>unhosted social dashboard example</title>
   </head>
   <body>
-    <div id="remotestorage-widget"></div>
+    <div id="remotestorage-connect"></div>
     <div id="interface"> </div>
   </body>
   <script src="remoteStorage-debug.js"></script>
@@ -92,7 +92,7 @@
           }
         });
       });
-      remoteStorage.onWidget('disconnected', function() {
+      remoteStorage.onWidget('disconnect', function() {
         setAppState('start');
       });
       remoteStorage.messages.onSockState(function(open) {

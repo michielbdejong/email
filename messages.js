@@ -1,7 +1,11 @@
 remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   var sock, open, sockStateCb = function() {}, resultCb = function() {};
+  function getConfig() {
+    return privateClient.getObject('.sockethub');
+  }
   function getWebsocketAddress() {
-    privateClient.getObject('.sockethub').then(function(obj) {
+    return getConfig().then(function(obj) {
+      console.log('config is now', typeof(obj), obj, obj.domain, obj.port);
       if(obj) {
         return {
           wss: 'wss://'+obj.domain+':'+obj.port+'/sock/websocket',
@@ -12,6 +16,8 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   }
   return {
     exports: {
+      getConfig: getConfig,
+      getWebsocketAddress: getWebsocketAddress,
       setConfig: function (obj) {
         return privateClient.storeObject('sockethub-config', '.sockethub', obj);
       },
@@ -43,7 +49,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
         return [];
       },
       sendTo: function(world, text) {
-        return privateClient.getObject('.sockethub').then(function(config) {
+        return getConfig().then(function(config) {
           sock.send(JSON.stringify({
             world: world,
             id: new Date().getTime(),
