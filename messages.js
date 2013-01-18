@@ -14,36 +14,44 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
       }
     });
   }
+  function tryConnect() {
+    getWebsocketAddress().then(function(obj) {
+      console.log('setting sock to '+obj.wss);
+      try {
+        sock = new WebSocket(obj.wss);
+      } catch(e) {
+        console.log(e);
+        sockStateCb(false);
+        return;
+      }
+      sock.onopen = function() {
+        sockStateCb(true);
+        open=true;
+      };
+      sock.onmessage = function(e) {
+        var timestamp = new Date().getTime(),
+          timePath = 'outgoing/'+timestamp.substring(0, 4)+'/'+timestamp.substring(4, 7)+'/'+timestamp.substring(7);
+        privateClient.storeObject('activity', timePath, e).then(function() {
+          onResult();
+        });
+      };
+      sock.onclose = function() {
+        console.log('onclose', open);
+        if(open) {//open socket died
+          tryConnect();
+        } else {//socket failed to open
+          sockStateCb(false);
+        }
+      };
+    });
+  }
   return {
     exports: {
       getConfig: getConfig,
       getWebsocketAddress: getWebsocketAddress,
+      tryConnect: tryConnect,
       setConfig: function (obj) {
         return privateClient.storeObject('sockethub-config', '.sockethub', obj);
-      },
-      tryConnect: function () {
-        getWebsocketAddress().then(function(obj) {
-          sock = new WebSocket(obj.wss);
-
-          sock.onopen = function() {
-            sockStateCb(true);
-            open=true;
-          };
-          sock.onmessage = function(e) {
-            var timestamp = new Date().getTime(),
-              timePath = 'outgoing/'+timestamp.substring(0, 4)+'/'+timestamp.substring(4, 7)+'/'+timestamp.substring(7);
-            privateClient.storeObject('activity', timePath, e).then(function() {
-              onResult();
-            });
-          };
-          sock.onclose = function() {
-            if(open) {//open socket died
-              newSocket();
-            } else {//socket failed to open
-              sockStateCb(false);
-            }
-          };
-        });
       },
       getHistory: function() {
         return [];

@@ -24,7 +24,7 @@
     function setAppState(state) {
       if(state=='start') {
         $('interface').innerHTML =
-          'Please connect your remotestorage (get one at <a href="https://heahdk.net/">https://heahdk.net/</a)';
+          'Please connect your remotestorage (get one at <a href="https://heahdk.net/">heahdk.net</a>)';
       } else if(state=='connectingRs') {
         $('interface').innerHTML =
           'Connecting to your remotestorage...';
@@ -43,7 +43,7 @@
             +(obj.wss ?
               'Failed to connect to '+obj.wss
               +'. Please check for <a href="'+obj.https
-              +'">SSL exceptions</a>'
+              +'" target="_blank">SSL exceptions</a>'
             :
               ''
             );
@@ -96,6 +96,7 @@
         setAppState('start');
       });
       remoteStorage.messages.onSockState(function(open) {
+        console.log('onSockState');
         if(open) {
           setAppState('ready');
         } else {
@@ -103,6 +104,7 @@
         }
       });
       remoteStorage.messages.onResult(function() {
+        console.log('onResult');
         setAppState('ready');
       });
       setAppState('start');
