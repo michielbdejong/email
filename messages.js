@@ -54,7 +54,9 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
         return privateClient.storeObject('sockethub-config', '.sockethub', obj);
       },
       getHistory: function() {
-        return [];
+        return privateClient.getAll('').then(function() {
+          return [];
+        });
       },
       sendTo: function(world, text) {
         return getConfig().then(function(config) {
