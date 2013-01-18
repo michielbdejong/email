@@ -30,9 +30,9 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
       };
       sock.onmessage = function(e) {
         var timeStr = new Date().getTime().toString(),
-          timePath = 'outgoing/'+timeStr.substring(0, 4)+'/'+timeStr.substring(4, 7)+'/'+timeStr.substring(7);
+          timePath = 'outgoing/'+timeStr.substring(0, 4)+'/'+timeStr.substring(4);
         privateClient.storeObject('activity', timePath, e).then(function() {
-          onResult();
+          resultCb();
         });
       };
       sock.onclose = function() {
@@ -54,9 +54,9 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
         return privateClient.storeObject('sockethub-config', '.sockethub', obj);
       },
       getHistory: function() {
-        return privateClient.getAll('').then(function() {
-          return [];
-        });
+        var timeStr = new Date().getTime().toString(),
+          timePath = 'outgoing/'+timeStr.substring(0, 4)+'/';
+        return privateClient.getAll(timePath);
       },
       sendTo: function(world, text) {
         return getConfig().then(function(config) {

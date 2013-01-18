@@ -14,10 +14,11 @@
     function $(id) {
       return document.getElementById(id);
     }
-    function makeHistory(arr) {
+    function makeHistory(map) {
+      console.log('making history', JSON.stringify(map));
       var str = '<ul>';
-      for(var i=0; i<arr.length; i++) {
-        str += '<li>'+arr[i]+'</li>';
+      for(var i in map) {
+        str += '<li>'+i+':'+JSON.stringify(map[i])+'</li>';
       }
       return str+'</ul>';
     }
