@@ -5,7 +5,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   }
   function getWebsocketAddress() {
     return getConfig().then(function(obj) {
-      console.log('config is now', typeof(obj), obj, obj.domain, obj.port);
+      //console.log('config is now', typeof(obj), obj, obj.domain, obj.port);
       if(obj) {
         return {
           wss: 'wss://'+obj.domain+':'+obj.port+'/sock/websocket',
@@ -16,7 +16,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   }
   function tryConnect() {
     getWebsocketAddress().then(function(obj) {
-      console.log('setting sock to '+obj.wss);
+      //console.log('setting sock to '+obj.wss);
       try {
         sock = new WebSocket(obj.wss);
       } catch(e) {
