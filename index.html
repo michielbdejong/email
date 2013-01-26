@@ -43,7 +43,7 @@
             +'Port: <input id="port">'
             +'Secret: <input id="secret">'
             +'<input type="submit" value="connect" onclick="configure();">'
-            +(obj.wss ?
+            +(typeof(obj) == 'object' ?
               'Failed to connect to '+obj.wss
               +'. Please check for <a href="'+obj.https
               +'" target="_blank">SSL exceptions</a>'
