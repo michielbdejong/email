@@ -8,7 +8,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
       //console.log('config is now', typeof(obj), obj, obj.domain, obj.port);
       if(obj) {
         return {
-          ws: 'ws://'+obj.domain+':'+obj.port+'/sock/websocket',
+          ws: 'ws://'+obj.domain+':'+obj.port+'/',
           https: 'https://'+obj.domain+':'+obj.port+'/'
         };
       }
@@ -18,7 +18,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
     getSockethubAddress().then(function(obj) {
       //console.log('setting sock to '+obj.ws);
       try {
-        sock = new WebSocket(obj.ws);
+        sock = new WebSocket(obj.ws, 'sockethub');
       } catch(e) {
         console.log(e);
         sockStateCb(false);
