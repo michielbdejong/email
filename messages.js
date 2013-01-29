@@ -9,7 +9,8 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
       if(obj) {
         return {
           ws: 'ws://'+obj.domain+':'+obj.port+'/',
-          https: 'https://'+obj.domain+':'+obj.port+'/'
+          https: 'https://'+obj.domain+':'+obj.port+'/',
+          secret: obj.secret
         };
       }
     });
@@ -27,6 +28,14 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
       sock.onopen = function() {
         sockStateCb(true);
         open=true;
+        sock.send(JSON.stringify({
+          rid: new Date().getTime(),
+          platform: 'dispatcher',
+          verb: 'register',
+          object: {
+            secret: obj.secret
+          }
+        }));
       };
       sock.onmessage = function(e) {
         var timeStr = new Date().getTime().toString(),
