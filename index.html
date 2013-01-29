@@ -5,8 +5,8 @@
     <title>unhosted social dashboard example</title>
   </head>
   <body>
-    <p>This example combines <a href="https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html">episode 5 of Unhosted Adventures</a> with
-      <a href="http://remotestorage.io/">remotestorage</a>.</p>
+    <p>This example requires you to run a <a href="http://sockethub.org/">Sockethub</a> server, and to have a
+      <a href="http://remotestorage.io/">remotestorage</a> account somewhere.</p>
     <div id="remotestorage-connect"></div>
     <div id="interface"> </div>
   </body>
@@ -32,19 +32,19 @@
         $('interface').innerHTML =
           'Connecting to your remotestorage...';
       } else if(state=='connectingWs') {
-        remoteStorage.messages.getWebsocketAddress().then(function(obj) {
+        remoteStorage.messages.getSockethubAddress().then(function(obj) {
           $('interface').innerHTML =
-            'Trying to connect to '+obj.wss;
+            'Trying to connect to '+obj.ws;
         });
       } else if(state=='nosock') {
-        remoteStorage.messages.getWebsocketAddress().then(function(obj) {
+        remoteStorage.messages.getSockethubAddress().then(function(obj) {
           $('interface').innerHTML =
-            'Domain: <input id="domain">'
-            +'Port: <input id="port">'
-            +'Secret: <input id="secret">'
+            'Sockethub Domain: <input id="domain">'
+            +'Sockethub Port: <input id="port">'
+            +'Sockethub Secret: <input id="secret">'
             +'<input type="submit" value="connect" onclick="configure();">'
             +(typeof(obj) == 'object' ?
-              'Failed to connect to '+obj.wss
+              'Failed to connect to '+obj.ws
               +'. Please check for <a href="'+obj.https
               +'" target="_blank">SSL exceptions</a>'
             :

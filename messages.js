@@ -3,22 +3,22 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   function getConfig() {
     return privateClient.getObject('.sockethub');
   }
-  function getWebsocketAddress() {
+  function getSockethubAddress() {
     return getConfig().then(function(obj) {
       //console.log('config is now', typeof(obj), obj, obj.domain, obj.port);
       if(obj) {
         return {
-          wss: 'wss://'+obj.domain+':'+obj.port+'/sock/websocket',
+          ws: 'ws://'+obj.domain+':'+obj.port+'/sock/websocket',
           https: 'https://'+obj.domain+':'+obj.port+'/'
         };
       }
     });
   }
   function tryConnect() {
-    getWebsocketAddress().then(function(obj) {
-      //console.log('setting sock to '+obj.wss);
+    getSockethubAddress().then(function(obj) {
+      //console.log('setting sock to '+obj.ws);
       try {
-        sock = new WebSocket(obj.wss);
+        sock = new WebSocket(obj.ws);
       } catch(e) {
         console.log(e);
         sockStateCb(false);
@@ -48,7 +48,7 @@ remoteStorage.defineModule('messages', function(privateClient, publicClient) {
   return {
     exports: {
       getConfig: getConfig,
-      getWebsocketAddress: getWebsocketAddress,
+      getSockethubAddress: getSockethubAddress,
       tryConnect: tryConnect,
       setConfig: function (obj) {
         return privateClient.storeObject('sockethub-config', '.sockethub', obj);
