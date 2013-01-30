@@ -1,21 +1,23 @@
-document.sockethub = (function() {
-  var sock, host, secret
-    onError: function(err) {
-      console.log(err);
-    },
-    onActivity: function(activity) {
-      console.log(activity);
-    },
-    onReady: function() {
-      console.log('ready');
+window.sockethub = (function() {
+  var sock, host, secret,
+    handler = {
+      error: function(err) {
+        console.log(err);
+      },
+      activity: function(activity) {
+        console.log(activity);
+      },
+      ready: function() {
+        console.log('ready');
+      }
     };
   return {
     connect: function(setHost, setSecret) {
       host = setHost;
-      secret = setSecret;
       sock = new WebSocket('ws://'+host+'/', 'sockethub');
       sock.onopen = function() {
         registerRid = new Date().getTime();
+        secret = setSecret;
         sock.send(JSON.stringify({
           rid: registerRid,
           platform: 'dispatcher',
@@ -30,17 +32,21 @@ document.sockethub = (function() {
         try {
           data = JSON.parse(e.data);
         } catch(err) {
-          onError('bogus message: '+e.data);
+          handler.error('bogus message: '+e.data);
           return;
         }
         if(data.rid && data.rid == registerRid) {
-          onReady();
+          handler.ready();
         } else {
-          onActivity(data);
+          handler.activity(data);
         }
       };
       sock.onclose = function() {
-        this.connect(host, secret);
+        if(secret) {
+          sockethub.connect(host, secret);
+        } else {
+          handler.error('could not connect to the sockethub server on '+host);
+        }
       }
     },
     post: function(platform, credentials, object) {
@@ -50,6 +56,9 @@ document.sockethub = (function() {
     },
     reset: function() {
       sock.close();
+    },
+    on: function(event, cb) {
+      handler[event] = cb;
     }
   };
 })();
