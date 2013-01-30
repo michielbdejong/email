@@ -11,21 +11,29 @@ window.sockethub = (function() {
         console.log('ready');
       }
     };
+  function send(data) {
+    data.rid = new Date().getTime();
+    if(sock && sock.readyState == WebSocket.OPEN) {
+      console.log('[sockethub OUT]', JSON.stringify(data));
+      sock.send(JSON.stringify(data));
+      return data.rid;
+    } else {
+      handler.error('sockethub is not open, sorry');
+    }
+  }
   return {
     connect: function(setHost, setSecret) {
       host = setHost;
       sock = new WebSocket('ws://'+host+'/', 'sockethub');
       sock.onopen = function() {
-        registerRid = new Date().getTime();
         secret = setSecret;
-        sock.send(JSON.stringify({
-          rid: registerRid,
+        registerRid = send({
           platform: 'dispatcher',
           verb: 'register',
           object: {
             secret: secret
           }
-        }));
+        });
       };
       sock.onmessage = function(e) {
         var data;
@@ -35,8 +43,16 @@ window.sockethub = (function() {
           handler.error('bogus message: '+e.data);
           return;
         }
-        if(data.rid && data.rid == registerRid) {
-          handler.ready();
+        console.log('[sockethub IN]', JSON.stringify(data));
+        if(data.verb == 'confirm') {
+          return;
+        }
+        if(data.rid && data.rid == registerRid && data.verb == 'register') {
+          if(data.status) {
+            handler.ready();
+          } else {
+            handler.error(data.message);
+          }
         } else {
           handler.activity(data);
         }
@@ -50,6 +66,12 @@ window.sockethub = (function() {
       }
     },
     post: function(platform, credentials, object) {
+      send({
+        platform: platform,
+        credentials: credentials,
+        verb: 'post',
+        object: object
+      });
     },
     getState: function() {
       return sock.readyState;
