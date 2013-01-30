@@ -5,112 +5,77 @@
     <title>unhosted social dashboard example</title>
   </head>
   <body>
-    <p>This example requires you to run a <a href="http://sockethub.org/">Sockethub</a> server, and to have a
-      <a href="http://remotestorage.io/">remotestorage</a> account somewhere.</p>
-    <div id="remotestorage-connect"></div>
-    <div id="interface"> </div>
+    <h1>This app requires a Sockethub server.</h1>
+    <p>
+      <a href="http://sockethub.org/">Sockethub</a> server:
+      <ul>
+        <li>Domain and port: <input id="sockethubServer" value="localhost:10550" /></li>
+        <li>Secret: <input id="sockethubSecret" value="1234567890" /></li>
+      </ul>
+      <input type="submit" value="connect" onclick="connect();" />
+    </p>
+    <p>
+      <a href="https://dev.twitter.com/apps">Twitter</a> credentials:
+      <ul>
+        <li>Consumer Key: <input id="twitterConsumerKey" /></li>
+        <li>Consumer Secret: <input id="twitterConsumerSecret" /></li>
+        <li>Access Token: <input id="twitterAccessToken" /></li>
+        <li>Access Token Secret: <input id="twitterAccessTokenSecret" /></li>
+      </ul>
+    </p>
+    <p>
+      <a href="https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html">Facebook</a> credentials:
+      <ul>
+        <li>Token: <input id="facebookToken" /></li>
+      </ul>
+    </p>
+    <p>   
+      Text: <input id="text" style="width:70em">
+      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff" />
+      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff" />
+   </p>
+   <h1>Log:</h1>
+   <ul id="log">
+   </ul>
   </body>
-  <script src="remoteStorage.js"></script>
-  <script src="messages.js"></script>
+  <script src="sockethub.js"></script>
   <script>
-    function $(id) {
-      return document.getElementById(id);
+    function value(id) {
+      return document.getElementById(id).value;
     }
-    function makeHistory(map) {
-      console.log('making history', JSON.stringify(map));
-      var str = '<ul>';
-      for(var i in map) {
-        str += '<li>'+i+':'+JSON.stringify(map[i])+'</li>';
+    function log(msg) {
+      if(typeof(msg) != 'string') {
+        msg = JSON.stringify(msg);
       }
-      return str+'</ul>';
+      document.getElementById('log').innerHTML += '<li>'+msg+'</li>';
     }
-    function setAppState(state) {
-      if(state=='start') {
-        $('interface').innerHTML =
-          'Please connect your remotestorage (get one at <a href="https://heahdk.net/">heahdk.net</a>)';
-      } else if(state=='connectingRs') {
-        $('interface').innerHTML =
-          'Connecting to your remotestorage...';
-      } else if(state=='connectingWs') {
-        remoteStorage.messages.getSockethubAddress().then(function(obj) {
-          $('interface').innerHTML =
-            'Trying to connect to '+obj.ws;
-        });
-      } else if(state=='nosock') {
-        remoteStorage.messages.getSockethubAddress().then(function(obj) {
-          $('interface').innerHTML =
-            'Sockethub Domain: <input id="domain">'
-            +'Sockethub Port: <input id="port">'
-            +'Sockethub Secret: <input id="secret">'
-            +'<input type="submit" value="connect" onclick="configure();">'
-            +(typeof(obj) == 'object' ?
-              'Failed to connect to '+obj.ws
-              +'. Please check for <a href="'+obj.https
-              +'" target="_blank">SSL exceptions</a>'
-            :
-              ''
-            );
-        });
-      } else if(state=='sending') {
-        remoteStorage.messages.getHistory().then(function(arr) {
-          $('interface').innerHTML = '<p>Sending...</p>'+makeHistory(arr);
-        });
-      } else {//ready
-        remoteStorage.messages.getHistory().then(function(arr) {
-          $('interface').innerHTML =
-            'Text: <input id="text" style="width:70em">'
-            +'<input type="submit" value="f" onclick="sendTo(\'facebook\');" style="background-color:#008;color:#fff">'
-            +'<input type="submit" value="t" onclick="sendTo(\'twitter\');" style="background-color:#bbf;color:#fff">'
-            +makeHistory(arr);
-        });
+    function getCredentials(platform) {
+      if(platform == 'facebook') {
+        return {
+          token: value('facebookToken')
+        };
+      } else {
+        return {
+          consumerKey: value('twitterConsumerKey'),
+          consumerSecret: value('twitterConsumerSecret'),
+          accessToken: value('twitterAccessToken'),
+          accessTokenSecret: value('twitterAccessTokenSecret')
+        };
       }
     }
-     
-    function configure() {
-      var config = {
-        domain: $('domain').value,
-        port: $('port').value,
-        secret: $('secret').value
-      };
-      setAppState('connectingWs');
-      remoteStorage.messages.setConfig(config).then(function() {
-        remoteStorage.messages.tryConnect();
+    function connect() {
+      sockethub.connect(value('sockethubServer'), value('sockethubSecret'));
+      sockethub.on('ready', function() {
+        log('ready');
+      });
+      sockethub.on('error', log);
+      sockethub.on('activity', log);
+    }
+    function sendTo(platform) {
+      sockethub.post(platform, getCredentials(platform), {
+        text: value('text')
       });
     }
-    function sendTo(world) {
-      var text = $('text').value;
-      setAppState('sending');
-      remoteStorage.messages.sendTo(world, text);
-    }
-    remoteStorage.claimAccess({ messages: 'rw' }).then(function() {
-      remoteStorage.displayWidget('remotestorage-connect');
-      remoteStorage.onWidget('ready', function() {
-        setAppState('connectingRs');
-        remoteStorage.messages.getConfig().then(function(config) {
-          if(config) {
-            setAppState('connectingWs');
-            remoteStorage.messages.tryConnect();
-          } else {
-            setAppState('nosock');
-          }
-        });
-      });
-      remoteStorage.onWidget('disconnect', function() {
-        setAppState('start');
-      });
-      remoteStorage.messages.onSockState(function(open) {
-        console.log('onSockState');
-        if(open) {
-          setAppState('ready');
-        } else {
-          setAppState('nosock');
-        }
-      });
-      remoteStorage.messages.onResult(function() {
-        console.log('onResult');
-        setAppState('ready');
-      });
-      setAppState('start');
-    });
+    log('Ready for you to click "Connect"');
   </script>
 </html>
