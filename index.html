@@ -40,7 +40,10 @@
   </body>
   <script src="sockethub.js"></script>
   <script>
-    function value(id) {
+    function value(id, val) {
+      if(val) {
+        document.getElementById(id).value = val;
+      }
       return document.getElementById(id).value;
     }
     function log(msg) {
@@ -50,17 +53,38 @@
       document.getElementById('log').innerHTML += '<li>'+msg+'</li>';
     }
     function getCredentials(platform) {
+      var creds;
       if(platform == 'facebook') {
-        return {
+        creds = {
           token: value('facebookToken')
         };
       } else {
-        return {
+        creds = {
           consumerKey: value('twitterConsumerKey'),
           consumerSecret: value('twitterConsumerSecret'),
           accessToken: value('twitterAccessToken'),
           accessTokenSecret: value('twitterAccessTokenSecret')
         };
+      }
+      localStorage.setItem(platform+'-credentials', JSON.stringify(creds));
+      return creds;
+    }
+    function reviveCredentials(platform) {
+      var credsStr = localStorage.getItem(platform+'-credentials');
+      if(typeof(credsStr) == 'string') {
+        try {
+          creds = JSON.parse(credsStr);
+        } catch(e) {
+          return;
+        }
+        if(platform == 'facebook') {
+          value('facebookToken', creds.token);
+        } else {
+          value('twitterConsumerKey', creds.consumerKey);
+          value('twitterConsumerSecret', creds.consumerSecret);
+          value('twitterAccessToken', creds.accessToken);
+          value('twitterAccessTokenSecret', creds.accessTokenSecret);
+        }
       }
     }
     function connect() {
@@ -77,5 +101,7 @@
       });
     }
     log('Ready for you to click "Connect"');
+    reviveCredentials('twitter');
+    reviveCredentials('facebook');
   </script>
 </html>
