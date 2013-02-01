@@ -1,2 +1,3 @@
-# basic unhosted social example
-this is the Sockethub-based version of the 'social dashboard' example from https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html.
+# basic unhosted email example
+this is the Sockethub-based version of the app that I have been using to send emails.
+It's very basic, but it does the job.

@@ -3,6 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <title>unhosted social dashboard example</title>
+    
+    <script src="codemirror-3.0/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="codemirror-3.0/lib/codemirror.css" />
+    
+    <script src="codemirror-3.0/mode/xml/xml.js"></script>
+    <script src="codemirror-3.0/mode/javascript/javascript.js"></script>
+    <script src="codemirror-3.0/mode/css/css.js"></script>
+    <script src="codemirror-3.0/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="codemirror-3.0/mode/markdown/markdown.js"></script>
+    <script src="codemirror-3.0/mode/clike/clike.js"></script>
+    <script src="codemirror-3.0/mode/php/php.js"></script>
+      
+    <script src="codemirror-3.0/lib/util/search.js"></script>
+    <script src="codemirror-3.0/lib/util/searchcursor.js"></script>
+    <script src="codemirror-3.0/lib/util/dialog.js"></script>
   </head>
   <body>
     <h1>This app requires a Sockethub server.</h1>
@@ -15,24 +30,19 @@
       <input type="submit" value="connect" onclick="connect();" />
     </p>
     <p>
-      <a href="https://dev.twitter.com/apps">Twitter</a> credentials:
+      SMTP credentials:
       <ul>
-        <li>Consumer Key: <input id="twitterConsumerKey" /></li>
-        <li>Consumer Secret: <input id="twitterConsumerSecret" /></li>
-        <li>Access Token: <input id="twitterAccessToken" /></li>
-        <li>Access Token Secret: <input id="twitterAccessTokenSecret" /></li>
-      </ul>
-    </p>
-    <p>
-      <a href="https://unhosted.org/adventures/5/Facebook-and-Twitter-from-nodejs.html">Facebook</a> credentials:
-      <ul>
-        <li>Token: <input id="facebookToken" /></li>
+        <li>Host: <input id="smtpHost" /></li>
+        <li>User: <input id="smtpUser" /></li>
+        <li>Password: <input id="smtpPassword" /></li>
       </ul>
     </p>
     <p>   
-      Text: <input id="text" style="width:70em">
-      <input type="submit" value="f" onclick="sendTo('facebook');" style="background-color:#008;color:#fff" />
-      <input type="submit" value="t" onclick="sendTo('twitter');" style="background-color:#bbf;color:#fff" />
+      Subject: <input id="text" style="width:70em" />
+      To: <input id="to" />
+      Ref: <input id="ref" />
+      <input type="submit" value="f" onclick="send();" />
+      <div id="editor"></div>
    </p>
    <h1>Log:</h1>
    <ul id="log">
@@ -40,6 +50,8 @@
   </body>
   <script src="sockethub.js"></script>
   <script>
+    var myCodeMirror = new CodeMirror(document.getElementById('editor'));
+
     function value(id, val) {
       if(val) {
         document.getElementById(id).value = val;
@@ -52,39 +64,26 @@
       }
       document.getElementById('log').innerHTML += '<li>'+msg+'</li>';
     }
-    function getCredentials(platform) {
-      var creds;
-      if(platform == 'facebook') {
-        creds = {
-          token: value('facebookToken')
-        };
-      } else {
-        creds = {
-          consumerKey: value('twitterConsumerKey'),
-          consumerSecret: value('twitterConsumerSecret'),
-          accessToken: value('twitterAccessToken'),
-          accessTokenSecret: value('twitterAccessTokenSecret')
-        };
-      }
-      localStorage.setItem(platform+'-credentials', JSON.stringify(creds));
+    function getCredentials() {
+      var creds = {
+        host: value('smtpHost'),
+        user: value('smtpUser'),
+        password: value('smtpPassword')
+      };
+      localStorage.setItem('smtp-credentials', JSON.stringify(creds));
       return creds;
     }
-    function reviveCredentials(platform) {
-      var credsStr = localStorage.getItem(platform+'-credentials');
+    function reviveCredentials() {
+      var credsStr = localStorage.getItem('smtp-credentials');
       if(typeof(credsStr) == 'string') {
         try {
           creds = JSON.parse(credsStr);
         } catch(e) {
           return;
         }
-        if(platform == 'facebook') {
-          value('facebookToken', creds.token);
-        } else {
-          value('twitterConsumerKey', creds.consumerKey);
-          value('twitterConsumerSecret', creds.consumerSecret);
-          value('twitterAccessToken', creds.accessToken);
-          value('twitterAccessTokenSecret', creds.accessTokenSecret);
-        }
+        value('smtpHost', creds.host);
+        value('smtpUser', creds.user);
+        value('smtpPassword', creds.password);
       }
     }
     function connect() {
@@ -95,13 +94,16 @@
       sockethub.on('error', log);
       sockethub.on('activity', log);
     }
-    function sendTo(platform) {
-      sockethub.post(platform, getCredentials(platform), {
-        text: value('text')
+    function send() {
+      sockethub.send('smtp', getCredentials(), {
+        body: myCodeMirror.getValue(),
+        subject: value('subject'),
+        ref: value('ref')
+      }, {
+        to: value('to').split(',')
       });
     }
     log('Ready for you to click "Connect"');
-    reviveCredentials('twitter');
-    reviveCredentials('facebook');
+    reviveCredentials();
   </script>
 </html>
