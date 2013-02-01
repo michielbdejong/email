@@ -98,6 +98,10 @@
       sockethub.on('activity', log);
     }
     function send() {
+      var recipients = value('to').split(',');
+      for(var i=0; i<recipients.length; i++) {
+        recipients[i] = { address: recipients[i] };
+      }
       sockethub.send('smtp', getCredentials(), {
         actor: {
           address: 'michiel@michielbdejong.com'
@@ -108,7 +112,7 @@
           ref: value('ref')
         },
         target: {
-          to: value('to').split(',')
+          to: recipients
         }
       });
     }

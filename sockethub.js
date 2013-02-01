@@ -77,7 +77,7 @@ window.sockethub = (function() {
       sendActivity({
         platform: platform,
         credentials: credentials,
-        verb: 'send',
+        verb: 'message',
         actor: activity.actor,
         object: activity.object,
         target: activity.target
