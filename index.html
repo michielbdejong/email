@@ -90,6 +90,7 @@
       }
     }
     function connect() {
+      log('connecting...');
       sockethub.connect(value('sockethubServer'), value('sockethubSecret'));
       sockethub.on('ready', function() {
         log('ready');
