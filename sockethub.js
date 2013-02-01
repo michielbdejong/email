@@ -11,7 +11,7 @@ window.sockethub = (function() {
         console.log('ready');
       }
     };
-  function send(data) {
+  function sendActivity(data) {
     data.rid = new Date().getTime();
     if(sock && sock.readyState == WebSocket.OPEN) {
       console.log('[sockethub OUT]', JSON.stringify(data));
@@ -27,7 +27,7 @@ window.sockethub = (function() {
       sock = new WebSocket('ws://'+host+'/', 'sockethub');
       sock.onopen = function() {
         secret = setSecret;
-        registerRid = send({
+        registerRid = sendActivity({
           platform: 'dispatcher',
           verb: 'register',
           object: {
@@ -66,11 +66,21 @@ window.sockethub = (function() {
       }
     },
     post: function(platform, credentials, object) {
-      send({
+      sendActivity({
         platform: platform,
         credentials: credentials,
         verb: 'post',
         object: object
+      });
+    },
+    send: function(platform, credentials, activity) {
+      sendActivity({
+        platform: platform,
+        credentials: credentials,
+        verb: 'send',
+        actor: activity.actor,
+        object: activity.object,
+        target: activity.target
       });
     },
     getState: function() {

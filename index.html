@@ -18,6 +18,9 @@
     <script src="codemirror-3.0/lib/util/search.js"></script>
     <script src="codemirror-3.0/lib/util/searchcursor.js"></script>
     <script src="codemirror-3.0/lib/util/dialog.js"></script>
+    <style>
+      #editor { border-style: solid }
+    </style>
   </head>
   <body>
     <h1>This app requires a Sockethub server.</h1>
@@ -38,10 +41,10 @@
       </ul>
     </p>
     <p>   
-      Subject: <input id="text" style="width:70em" />
+      Subject: <input id="subject" style="width:70em" />
       To: <input id="to" />
       Ref: <input id="ref" />
-      <input type="submit" value="f" onclick="send();" />
+      <input type="submit" value="send" onclick="send();" />
       <div id="editor"></div>
    </p>
    <h1>Log:</h1>
@@ -96,11 +99,17 @@
     }
     function send() {
       sockethub.send('smtp', getCredentials(), {
-        body: myCodeMirror.getValue(),
-        subject: value('subject'),
-        ref: value('ref')
-      }, {
-        to: value('to').split(',')
+        actor: {
+          address: 'michiel@michielbdejong.com'
+        },
+        object: {
+          body: myCodeMirror.getValue(),
+          subject: value('subject'),
+          ref: value('ref')
+        },
+        target: {
+          to: value('to').split(',')
+        }
       });
     }
     log('Ready for you to click "Connect"');
