@@ -27,8 +27,8 @@
     <p>
       <a href="http://sockethub.org/">Sockethub</a> server:
       <ul>
-        <li>Domain and port: <input id="sockethubServer" value="localhost:10550" /></li>
-        <li>Secret: <input id="sockethubSecret" value="1234567890" /></li>
+        <li>Domain and port: <input id="sockethubServer" /></li>
+        <li>Secret: <input id="sockethubSecret" /></li>
       </ul>
       <input type="submit" value="connect" onclick="connect();" />
     </p>
@@ -77,6 +77,8 @@
       return creds;
     }
     function reviveCredentials() {
+      value('sockethubServer', localStorage.getItem('sockethubServer') || 'localhost:10550');
+      value('sockethubSecret', localStorage.getItem('sockethubSecret') || '1234567890');
       var credsStr = localStorage.getItem('smtp-credentials');
       if(typeof(credsStr) == 'string') {
         try {
@@ -90,6 +92,8 @@
       }
     }
     function connect() {
+      localStorage.setItem('sockethubServer', value('sockethubServer'));
+      localStorage.setItem('sockethubSecret', value('sockethubSecret'));
       log('connecting...');
       sockethub.connect(value('sockethubServer'), value('sockethubSecret'));
       sockethub.on('ready', function() {
@@ -103,7 +107,7 @@
       for(var i=0; i<recipients.length; i++) {
         recipients[i] = { address: recipients[i] };
       }
-      sockethub.send('smtp', getCredentials(), {
+      sockethub.send('email', getCredentials(), {
         actor: {
           address: 'michiel@michielbdejong.com'
         },
