@@ -85,6 +85,9 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
   }
   return {
     exports: {
+      init: function() {
+        publicClient.release('');
+      },
       connect: connect,
       post: post,
       send: send,

@@ -1,6 +1,9 @@
 remoteStorage.defineModule('email', function(privateClient, publicClient) {
   return {
     exports: {
+      init: function() {
+        publicClient.release('');
+      },
       setCredentials: function(creds) {
         return privateClient.storeDocument('credentials', 'credentials.json', creds);
       },

@@ -146,6 +146,8 @@
       sockethub: 'rw',
       email: 'rw'
     }).then(function() {
+      remoteStorage.sockethub.init();
+      remoteStorage.email.init();
       return remoteStorage.displayWidget();
     }).then(function() {
       return remoteStorage.onWidget('ready', function() {
