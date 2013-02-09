@@ -111,17 +111,18 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       setCredentials: function(creds) {
         return privateClient.storeObject('credentials', 'credentials.json', creds);
       },
+      //providing this temporarily to work around problems with the change events:
+      getCredentials: function() {
+        return privateClient.getObject('credentials.json');
+      },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
-          if(e.origin != 'window' && e.path == 'credentials.json') {
-            var obj;
-            try {
-              obj = JSON.parse(e.newValue);
-            } catch(e) {
-            }
-            if(obj) {
-              cb(obj);
-            }
+          console.log('sockethub private change');
+          console.log(e);
+          //if(e.origin != 'window' && e.path == 'credentials.json') {
+          if(e.origin != 'window' && e.path == '/sockethub/credentials.json') {
+            console.log('found '+e.newValue);
+            cb(e.newValue);
           }
         });
       }

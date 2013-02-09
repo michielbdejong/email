@@ -86,10 +86,10 @@
       };
       remoteStorage.sockethub.setCredentials(creds);
     }
-    remoteStorage.sockethub.onCredentials = function(creds) {
+    remoteStorage.sockethub.onCredentials(function(creds) {
       value('sockethubHost', creds.host);
       value('sockethubSecret', creds.secret);
-    };
+    });
 
     //EMAIL CREDENTIALS
     function updateEmailCredentials() {
@@ -100,11 +100,11 @@
       };
       remoteStorage.email.setCredentials(creds);
     }
-    remoteStorage.email.onCredentials = function(creds) {
+    remoteStorage.email.onCredentials(function(creds) {
       value('smtpHost', creds.host);
       value('smtpUser', creds.user);
       value('smtpPassword', creds.password);
-    };
+    });
     
     //CODEMIRROR AND SOCKETHUB:
     var myCodeMirror = new CodeMirror(document.getElementById('editor'));
