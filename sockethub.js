@@ -4,7 +4,6 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
     type: 'object',
     properties: {
       host: {type: 'string', required: true},
-      port: {type: 'string', required: true},
       secret: {type: 'string', required: true}
     }
   });
