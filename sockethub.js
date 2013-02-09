@@ -119,4 +119,4 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       }
     }
   };
-})();
+});
