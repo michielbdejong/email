@@ -18,43 +18,52 @@
     <script src="codemirror-3.0/lib/util/search.js"></script>
     <script src="codemirror-3.0/lib/util/searchcursor.js"></script>
     <script src="codemirror-3.0/lib/util/dialog.js"></script>
+
+    <script src="remoteStorage-37ef7b0-debug.js"></script>
+    <script src="sockethub.js"></script>
+    <script src="email.js"></script>
     <style>
       #editor { border-style: solid }
     </style>
   </head>
   <body>
     <h1>This app requires a Sockethub server.</h1>
+    <h1>CREDENTIALS</h1>
     <p>
+      Sockethub credentials:
       <a href="http://sockethub.org/">Sockethub</a> server:
       <ul>
-        <li>Domain and port: <input id="sockethubServer" /></li>
+        <li>Domain and port: <input id="sockethubHost" /></li>
         <li>Secret: <input id="sockethubSecret" /></li>
       </ul>
-      <input type="submit" value="connect" onclick="connect();" />
+      <input type="submit" value="update" onclick="updateSockethubCredentials();" />
     </p>
     <p>
-      SMTP credentials:
+      Email credentials:
       <ul>
         <li>Host: <input id="smtpHost" /></li>
         <li>User: <input id="smtpUser" /></li>
         <li>Password: <input id="smtpPassword" /></li>
       </ul>
+      <input type="submit" value="update" onclick="updateEmailCredentials();" />
     </p>
-    <p>   
-      Subject: <input id="subject" style="width:70em" />
-      To: <input id="to" />
+    <h1>EMAIL</h1>
+    <p>
+      Subject: <input id="subject" style="width:70em" /><br />
+      From: <input id="from" /><br />
+      To: <input id="to" /><br />
+      Cc: <input id="cc" /><br />
+      Bcc: <input id="bcc" /><br />
       Ref: <input id="ref" />
-      <input type="submit" value="send" onclick="send();" />
+      <input type="submit" value="send" onclick="send();" /><br />
       <div id="editor"></div>
    </p>
    <h1>Log:</h1>
    <ul id="log">
    </ul>
   </body>
-  <script src="sockethub.js"></script>
   <script>
-    var myCodeMirror = new CodeMirror(document.getElementById('editor'));
-
+    //BASICS:
     function value(id, val) {
       if(val) {
         document.getElementById(id).value = val;
@@ -67,49 +76,57 @@
       }
       document.getElementById('log').innerHTML += '<li>'+msg+'</li>';
     }
-    function getCredentials() {
+
+    //SOCKETHUB CREDENTIALS
+    function setSockethubCredentials() {
+      var creds = {
+        host: value('sockethubHost'),
+        secret: value('sockethubSecret')
+      };
+      remoteStorage.sockethub.setCredentials(creds);
+    }
+    remoteStorage.sockethub.onCredentials = function(creds) {
+      value('sockethubHost', creds.host);
+      value('sockethubSecret', creds.secret);
+    };
+
+    //EMAIL CREDENTIALS
+    function setEmailCredentials() {
       var creds = {
         host: value('smtpHost'),
         user: value('smtpUser'),
         password: value('smtpPassword')
       };
-      localStorage.setItem('smtp-credentials', JSON.stringify(creds));
-      return creds;
+      remoteStorage.email.setCredentials(creds);
     }
-    function reviveCredentials() {
-      value('sockethubServer', localStorage.getItem('sockethubServer') || 'localhost:10550');
-      value('sockethubSecret', localStorage.getItem('sockethubSecret') || '1234567890');
-      var credsStr = localStorage.getItem('smtp-credentials');
-      if(typeof(credsStr) == 'string') {
-        try {
-          creds = JSON.parse(credsStr);
-        } catch(e) {
-          return;
-        }
-        value('smtpHost', creds.host);
-        value('smtpUser', creds.user);
-        value('smtpPassword', creds.password);
-      }
-    }
+    remoteStorage.email.onCredentials = function(creds) {
+      value('smtpHost', creds.host);
+      value('smtpUser', creds.user);
+      value('smtpPassword', creds.password);
+    };
+    
+    //CODEMIRROR AND SOCKETHUB:
+    var myCodeMirror = new CodeMirror(document.getElementById('editor'));
+
     function connect() {
-      localStorage.setItem('sockethubServer', value('sockethubServer'));
-      localStorage.setItem('sockethubSecret', value('sockethubSecret'));
-      log('connecting...');
-      sockethub.connect(value('sockethubServer'), value('sockethubSecret'));
-      sockethub.on('ready', function() {
+      remoteStorage.sockethub.connect();
+      remoteStorage.sockethub.on('ready', function() {
         log('ready');
       });
-      sockethub.on('error', log);
-      sockethub.on('activity', log);
+      remoteStorage.sockethub.on('error', log);
+      remoteStorage.sockethub.on('activity', log);
     }
-    function send() {
-      var recipients = value('to').split(',');
+    function toRecipientsList(str) {
+      var recipients = str.split(',');
       for(var i=0; i<recipients.length; i++) {
         recipients[i] = { address: recipients[i] };
       }
-      sockethub.send('email', getCredentials(), {
+      return recipients;
+    }
+    function send() {
+      remoteStorage.sockethub.send('email', remoteStorage.email.getCredentials(), {
         actor: {
-          address: 'michiel@michielbdejong.com'
+          address: value('from')
         },
         object: {
           body: myCodeMirror.getValue(),
@@ -117,11 +134,23 @@
           ref: value('ref')
         },
         target: {
-          to: recipients
+          to: toRecipientsList(value('to')),
+          cc: toRecipientsList(value('cc')),
+          bcc: toRecipientsList(value('bcc'))
         }
       });
     }
-    log('Ready for you to click "Connect"');
-    reviveCredentials();
+
+    log('Ready for you to connect your storage');
+    remoteStorage.claimAccess({
+      sockethub: 'rw',
+      email: 'rw'
+    }).then(function() {
+      return remoteStorage.displayWidget();
+    }).then(function() {
+      return remoteStorage.onWidget('ready', function() {
+        log('Ready for you to click "Connect"');
+      });
+    });
   </script>
 </html>
