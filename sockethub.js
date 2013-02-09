@@ -1,4 +1,13 @@
 remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
+  privateClient.declareType('credentials', {
+    description: 'Credentials that will allow this module to connect to your sockethub server',
+    type: 'object',
+    properties: {
+      host: {type: 'string', required: true},
+      port: {type: 'string', required: true},
+      secret: {type: 'string', required: true}
+    }
+  });
   var sock, host, secret,
     handler = {
       error: function(err) {
@@ -101,7 +110,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
         handler[event] = cb;
       },
       setCredentials: function(creds) {
-        return privateClient.storeDocument('credentials', 'credentials.json', creds);
+        return privateClient.storeObject('credentials', 'credentials.json', creds);
       },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
