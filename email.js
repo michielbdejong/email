@@ -1,5 +1,5 @@
 remoteStorage.defineModule('email', function(privateClient, publicClient) {
-  privateClient.declareType('credentials', {
+  privateClient.declareType('credentials2', {//work around bug where two modules may not use the same type name
     description: 'Credentials that will allow sockethub to connect to your mailserver',
     type: 'object',
     properties: {
@@ -14,7 +14,7 @@ remoteStorage.defineModule('email', function(privateClient, publicClient) {
         publicClient.release('');
       },
       setCredentials: function(creds) {
-        return privateClient.storeObject('credentials', 'credentials.json', creds);
+        return privateClient.storeObject('credentials2', 'credentials.json', creds);
       },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
