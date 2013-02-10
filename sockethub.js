@@ -67,7 +67,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
     };
     sock.onclose = function() {
       if(secret) {
-        sockethub.connect(host, secret);
+        connectNow();
       } else {
         handler.error('could not connect to the sockethub server on '+host);
       }
@@ -91,12 +91,24 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       target: activity.target
     });
   }
+  function connectNow() {
+    privateClient.getObject('credentials.json').then(function(creds) {
+      connect(creds.host, creds.secret, {
+        storageInfo: {
+          href: remoteStorage.getStorageHref(),
+          type: remoteStorage.getStorageType()
+        },
+        scope: 'sockethub:rw',
+        bearerToken: remoteStorage.getBearerToken()
+      });
+    });
+  }
   return {
     exports: {
       init: function() {
         publicClient.release('');
       },
-      connect: connect,
+      connectNow: connectNow,
       post: post,
       send: send,
       getState: function() {
@@ -111,16 +123,11 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       setCredentials: function(creds) {
         return privateClient.storeObject('credentials', 'credentials.json', creds);
       },
-      //providing this temporarily to work around problems with the change events:
-      getCredentials: function() {
-        return privateClient.getObject('credentials.json');
-      },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
           console.log('sockethub private change');
           console.log(e);
-          //if(e.origin != 'window' && e.path == 'credentials.json') {
-          if(e.origin != 'window' && e.path == '/sockethub/credentials.json') {
+          if(e.origin != 'window' && e.relativePath == 'credentials.json') {
             console.log('found '+e.newValue);
             cb(e.newValue);
           }

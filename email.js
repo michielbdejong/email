@@ -16,12 +16,14 @@ remoteStorage.defineModule('email', function(privateClient, publicClient) {
       setCredentials: function(creds) {
         return privateClient.storeObject('credentials2', 'credentials.json', creds);
       },
+      getCredentials: function() {
+        return privateClient.getObject('credentials.json');
+      },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
           console.log('email private change');
           console.log(e);
-          //if(e.origin != 'window' && e.path == 'credentials.json') {
-          if(e.origin != 'window' && e.path == '/email/credentials.json') {
+          if(e.origin != 'window' && e.relativePath == 'credentials.json') {
             console.log('found '+e.newValue);
             cb(e.newValue);
           }
