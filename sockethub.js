@@ -98,7 +98,10 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
           href: remoteStorage.getStorageHref(),
           type: remoteStorage.getStorageType()
         },
-        scope: 'rw',
+        scope: {
+          sockethub: 'rw',
+          email: 'rw'
+        },
         bearerToken: remoteStorage.getBearerToken()
       });
     });
