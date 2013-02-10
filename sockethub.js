@@ -126,6 +126,10 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       setCredentials: function(creds) {
         return privateClient.storeObject('credentials', 'credentials.json', creds);
       },
+      //used on page load, not sure if there is a better way to do this:
+      getCredentials: function(creds) {
+        return privateClient.getObject('credentials');
+      },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
           connectNow();

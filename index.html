@@ -152,7 +152,16 @@
       return remoteStorage.displayWidget();
     }).then(function() {
       return remoteStorage.onWidget('ready', function() {
-        log('Ready for you to click "Connect"');
+        remoteStorage.sockethub.getCredentials().then(function(creds) {
+          value('sockethubHost', creds.host);
+          value('sockethubSecret', creds.secret);
+        });
+        remoteStorage.email.getCredentials().then(function(creds) {
+          value('smtpHost', creds.host);
+          value('smtpUser', creds.user);
+          value('smtpPassword', creds.password);
+        });
+        log('...');
       });
     });
   </script>
