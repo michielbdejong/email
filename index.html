@@ -125,23 +125,24 @@
       return recipients;
     }
     function send() {
-      remoteStorage.sockethub.send('email', remoteStorage.email.getCredentials(), {
-        actor: {
-          address: value('from')
-        },
-        object: {
-          body: myCodeMirror.getValue(),
-          subject: value('subject'),
-          ref: value('ref')
-        },
-        target: {
-          to: toRecipientsList(value('to')),
-          cc: toRecipientsList(value('cc')),
-          bcc: toRecipientsList(value('bcc'))
-        }
+      remoteStorage.email.getCredentials().then(function(creds) {
+        remoteStorage.sockethub.send('email', creds, {
+          actor: {
+            address: value('from')
+          },
+          object: {
+            body: myCodeMirror.getValue(),
+            subject: value('subject'),
+            ref: value('ref')
+          },
+          target: {
+            to: toRecipientsList(value('to')),
+            cc: toRecipientsList(value('cc')),
+            bcc: toRecipientsList(value('bcc'))
+          }
+        });
       });
     }
-
     log('Ready for you to connect your storage');
     remoteStorage.claimAccess({
       sockethub: 'rw',
