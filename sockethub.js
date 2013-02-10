@@ -98,7 +98,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
           href: remoteStorage.getStorageHref(),
           type: remoteStorage.getStorageType()
         },
-        scope: 'sockethub:rw',
+        scope: 'rw',
         bearerToken: remoteStorage.getBearerToken()
       });
     });
@@ -125,6 +125,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       },
       onCredentials: function(cb) {
         privateClient.on('change', function(e) {
+          connectNow();
           console.log('sockethub private change');
           console.log(e);
           if(e.origin != 'window' && e.relativePath == 'credentials.json') {
