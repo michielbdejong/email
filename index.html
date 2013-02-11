@@ -127,7 +127,7 @@
         user: value('pop3User'),
         password: value('pop3Password')
       };
-      remoteStorage.email.setSmtpCredentials(creds);
+      remoteStorage.email.setPop3Credentials(creds);
     }
     remoteStorage.email.onPop3Credentials(function(creds) {
       value('pop3Host', creds.host);
@@ -194,11 +194,19 @@
             value('sockethubSecret', creds.secret);
           }
         });
-        remoteStorage.email.getCredentials().then(function(creds) {
+        remoteStorage.email.getSmtpCredentials().then(function(creds) {
           if(creds) {
             value('smtpHost', creds.host);
             value('smtpUser', creds.user);
             value('smtpPassword', creds.password);
+          }
+        });
+        remoteStorage.email.getPop3Credentials().then(function(creds) {
+          if(creds) {
+            value('pop3Host', creds.host);
+            value('pop3Port', creds.port);
+            value('pop3User', creds.user);
+            value('pop3Password', creds.password);
           }
         });
         log('...');

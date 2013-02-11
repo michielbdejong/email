@@ -92,6 +92,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
     });
   }
   function retrieve(platform, credentials) {
+    credentials.tls = true;
     sendActivity({
       platform: platform,
       credentials: credentials,
@@ -118,6 +119,7 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       connectNow: connectNow,
       post: post,
       send: send,
+      retrieve: retrieve,
       getState: function() {
         return sock.readyState;
       },

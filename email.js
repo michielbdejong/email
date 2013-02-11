@@ -38,9 +38,9 @@ remoteStorage.defineModule('email', function(privateClient, publicClient) {
             cb(e.newValue);
           }
         });
-      }
+      },
       setPop3Credentials: function(creds) {
-        return privateClient.storeObject('smtp-credentials', 'credentials/pop3.json', creds);
+        return privateClient.storeObject('pop3-credentials', 'credentials/pop3.json', creds);
       },
       getPop3Credentials: function() {
         return privateClient.getObject('credentials/pop3.json');
