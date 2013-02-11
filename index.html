@@ -40,13 +40,23 @@
       <input type="submit" value="update" onclick="updateSockethubCredentials();" />
     </p>
     <p>
-      Email credentials:
+      SMTP credentials:
       <ul>
         <li>Host: <input id="smtpHost" /></li>
         <li>User: <input id="smtpUser" /></li>
         <li>Password: <input id="smtpPassword" /></li>
       </ul>
-      <input type="submit" value="update" onclick="updateEmailCredentials();" />
+      <input type="submit" value="update" onclick="updateSmtpCredentials();" />
+    </p>
+    <p>
+      POP3 credentials:
+      <ul>
+        <li>Host: <input id="pop3Host" /></li>
+        <li>Port: <input id="pop3Port" /></li>
+        <li>User: <input id="pop3User" /></li>
+        <li>Password: <input id="pop3Password" /></li>
+      </ul>
+      <input type="submit" value="update" onclick="updatePop3Credentials();" />
     </p>
     <h1>EMAIL</h1>
     <p>
@@ -91,19 +101,36 @@
       value('sockethubSecret', creds.secret);
     });
 
-    //EMAIL CREDENTIALS
-    function updateEmailCredentials() {
+    //SMTP CREDENTIALS
+    function updateSmtpCredentials() {
       var creds = {
         host: value('smtpHost'),
         user: value('smtpUser'),
         password: value('smtpPassword')
       };
-      remoteStorage.email.setCredentials(creds);
+      remoteStorage.email.setSmtpCredentials(creds);
     }
-    remoteStorage.email.onCredentials(function(creds) {
+    remoteStorage.email.onSmtpCredentials(function(creds) {
       value('smtpHost', creds.host);
       value('smtpUser', creds.user);
       value('smtpPassword', creds.password);
+    });
+    
+    //POP3 CREDENTIALS
+    function updatePop3Credentials() {
+      var creds = {
+        host: value('pop3Host'),
+        port: value('pop3Port'),
+        user: value('pop3User'),
+        password: value('pop3Password')
+      };
+      remoteStorage.email.setSmtpCredentials(creds);
+    }
+    remoteStorage.email.onPop3Credentials(function(creds) {
+      value('pop3Host', creds.host);
+      value('pop3Port', creds.port);
+      value('pop3User', creds.user);
+      value('pop3Password', creds.password);
     });
     
     //CODEMIRROR AND SOCKETHUB:
