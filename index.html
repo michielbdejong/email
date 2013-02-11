@@ -58,13 +58,16 @@
       </ul>
       <input type="submit" value="update" onclick="updatePop3Credentials();" />
     </p>
-    <h1>EMAIL</h1>
+    <h1>RETRIEVE</h1>
+    <p>
+      <input type="submit" value="retrieve" onclick="retrieve();" /><br />
+    </p>
+    <h1>SEND</h1>
     <p>
       Subject: <input id="subject" style="width:70em" /><br />
       From: <input id="from" /><br />
       To: <input id="to" /><br />
       Cc: <input id="cc" /><br />
-      Bcc: <input id="bcc" /><br />
       Ref: <input id="ref" />
       <input type="submit" value="send" onclick="send();" /><br />
       <div id="editor"></div>
@@ -151,8 +154,14 @@
       }
       return recipients;
     }
+    function retrieve() {
+      remoteStorage.email.getPop3Credentials().then(function(creds) {
+        remoteStorage.sockethub.retrieve('email', creds, {
+        });
+      });
+    } 
     function send() {
-      remoteStorage.email.getCredentials().then(function(creds) {
+      remoteStorage.email.getSmtpCredentials().then(function(creds) {
         remoteStorage.sockethub.send('email', creds, {
           actor: {
             address: value('from')
@@ -164,8 +173,7 @@
           },
           target: {
             to: toRecipientsList(value('to')),
-            cc: toRecipientsList(value('cc')),
-            bcc: toRecipientsList(value('bcc'))
+            cc: toRecipientsList(value('cc'))
           }
         });
       });

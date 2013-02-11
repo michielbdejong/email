@@ -91,6 +91,13 @@ remoteStorage.defineModule('sockethub', function(privateClient, publicClient) {
       target: activity.target
     });
   }
+  function retrieve(platform, credentials) {
+    sendActivity({
+      platform: platform,
+      credentials: credentials,
+      verb: 'retrieve'
+    });
+  }
   function connectNow() {
     privateClient.getObject('credentials.json').then(function(creds) {
       connect(creds.host, creds.secret, {
